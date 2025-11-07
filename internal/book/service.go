@@ -33,7 +33,7 @@ func (s *BookService) DeleteBook(ctx context.Context, id uuid.UUID) error {
 	return s.bookRepo.DeleteBook(ctx, id)
 }
 
-func (s *BookService) CreateBook(ctx context.Context, reqCreateBook *RequestCreateBook) (*ResponseCreateBook, error) {
+func (s *BookService) CreateBook(ctx context.Context, reqCreateBook RequestCreateBook) (*ResponseCreateBook, error) {
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 

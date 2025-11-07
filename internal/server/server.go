@@ -9,21 +9,31 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
+	"books-api/internal/book"
 	"books-api/internal/database"
 )
 
 type Server struct {
-	port int
-
-	db database.Service
+	port        int
+	db          database.Service
+	bookHandler *book.BookHandler
 }
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
 
-		db: database.New(),
+	// Inicializar database
+	db := database.New()
+
+	// Criar camadas seguindo a arquitetura (Repository -> Service -> Handler)
+	bookRepo := book.NewBookRepository(db.GetDB()) // Você precisará adicionar um método GetDB() no service
+	bookService := book.NewBookService(bookRepo)
+	bookHandler := book.NewBookHandler(bookService)
+
+	NewServer := &Server{
+		port:        port,
+		db:          db,
+		bookHandler: bookHandler,
 	}
 
 	// Declare Server config

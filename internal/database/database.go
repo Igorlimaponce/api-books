@@ -22,6 +22,7 @@ type Service interface {
 	// Close terminates the database connection.
 	// It returns an error if the connection cannot be closed.
 	Close() error
+	GetDB() *sql.DB
 }
 
 type service struct {
@@ -103,6 +104,10 @@ func (s *service) Health() map[string]string {
 	}
 
 	return stats
+}
+
+func (s *service) GetDB() *sql.DB {
+	return s.db
 }
 
 // Close closes the database connection.

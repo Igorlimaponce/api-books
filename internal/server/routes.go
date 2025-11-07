@@ -26,6 +26,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.Get("/health", s.healthHandler)
 
+	r.Route("/api/books", func(u chi.Router) {
+		u.Post("/", s.bookHandler.CreateBook)
+		u.Put("/", s.bookHandler.UpdateBook)
+		u.Get("/{id}", s.bookHandler.GetBookByID)
+		u.Delete("/{id}", s.bookHandler.DeleteBook)
+	})
 	return r
 }
 
