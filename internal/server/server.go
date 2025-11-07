@@ -26,7 +26,7 @@ func NewServer() *http.Server {
 	db := database.New()
 
 	// Criar camadas seguindo a arquitetura (Repository -> Service -> Handler)
-	bookRepo := book.NewBookRepository(db.GetDB()) // Você precisará adicionar um método GetDB() no service
+	bookRepo := book.NewBookRepository(db.GetDB())
 	bookService := book.NewBookService(bookRepo)
 	bookHandler := book.NewBookHandler(bookService)
 

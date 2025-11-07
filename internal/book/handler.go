@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
@@ -43,17 +44,27 @@ func (h *BookHandler) CreateBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BookHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
-	var book Book
+	var req RequestUpdateBook
 
-	if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Printf("UpdateBook - JSON decode error: %v", err)
 		util.WriteError(w, http.StatusBadRequest, "invalid JSON payload")
 		return
 	}
 
-	log.Printf("UpdateBook - Request received: title=%s, author=%s", book.Title, book.Author)
+	log.Printf("UpdateBook - Request received: id=%s, title=%s, author=%s", req.ID, req.Title, req.Author)
 
-	updatedBook, err := h.bookService.UpdateBook(r.Context(), &book)
+	// Map DTO (with FlexibleDate) to domain model (time.Time)
+	b := &Book{
+		ID:          req.ID,
+		Title:       req.Title,
+		Author:      req.Author,
+		Published:   req.Published.Time,
+		Image:       req.Image,
+		Description: req.Description,
+	}
+
+	updatedBook, err := h.bookService.UpdateBook(r.Context(), b)
 	if err != nil {
 		log.Printf("UpdateBook - Service error: %v", err)
 		util.WriteError(w, http.StatusInternalServerError, "failed to update book")
@@ -66,7 +77,7 @@ func (h *BookHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
-	var idParam = r.URL.Query().Get("id")
+	idParam := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		log.Printf("GetBookByID - Invalid UUID: %v", err)
@@ -90,7 +101,7 @@ func (h *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BookHandler) DeleteBook(w http.ResponseWriter, r *http.Request) {
-	var idParam = r.URL.Query().Get("id")
+	idParam := chi.URLParam(r, "id")
 	id, err := uuid.Parse(idParam)
 	if err != nil {
 		log.Printf("DeleteBook - Invalid UUID: %v", err)

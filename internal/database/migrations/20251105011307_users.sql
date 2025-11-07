@@ -8,11 +8,10 @@ CREATE TABLE books (
     title VARCHAR(255) NOT NULL,
     author VARCHAR(255) NOT NULL,
     published_date DATE NOT NULL,
-    image_url VARCHAR(255),
-    description VARCHAR(255),
+    image_url VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMP NOT NULL
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 -- +goose StatementEnd
 

@@ -21,7 +21,7 @@ type BookService struct {
 func NewBookService(bookRepo *BookRepository) *BookService {
 	return &BookService{
 		bookRepo: bookRepo,
-		timeout:  time.Duration(2) & time.Second,
+		timeout:  2 * time.Second,
 	}
 }
 
@@ -39,15 +39,22 @@ func (s *BookService) CreateBook(ctx context.Context, reqCreateBook RequestCreat
 
 	log.Printf("UserService.CreateBook - Starting book creation for: %s", reqCreateBook.Title)
 
-	if reqCreateBook.Title == "" || reqCreateBook.Published.IsZero() || reqCreateBook.Author == "" {
+	if reqCreateBook.Title == "" || reqCreateBook.Published.IsZero() || reqCreateBook.Author == "" || reqCreateBook.Image == "" || reqCreateBook.Description == "" {
 		log.Printf("UserService.CreateBook - Validation failed: missing required fields")
-		return nil, fmt.Errorf("title, published, and author are required")
+		return nil, fmt.Errorf("title, published, author, image, and description are required")
+	}
+
+	published := reqCreateBook.Published.Time
+	if published.IsZero() {
+		published = time.Now()
 	}
 
 	b := &Book{
-		Title:     reqCreateBook.Title,
-		Published: reqCreateBook.Published,
-		Author:    reqCreateBook.Author,
+		Title:       reqCreateBook.Title,
+		Published:   published,
+		Author:      reqCreateBook.Author,
+		Image:       reqCreateBook.Image,
+		Description: reqCreateBook.Description,
 	}
 
 	book, err := s.bookRepo.CreateBook(ctx, b)
@@ -57,9 +64,12 @@ func (s *BookService) CreateBook(ctx context.Context, reqCreateBook RequestCreat
 	}
 	log.Printf("UserService.CreateBook - Successfully created book with ID: %s", book.ID)
 	return &ResponseCreateBook{
-		ID:     book.ID,
-		Title:  book.Title,
-		Author: book.Author,
+		ID:          book.ID,
+		Title:       book.Title,
+		Author:      book.Author,
+		Published:   FlexibleDate{Time: book.Published},
+		Image:       book.Image,
+		Description: book.Description,
 	}, nil
 }
 
@@ -70,9 +80,13 @@ func (s *BookService) UpdateBook(ctx context.Context, book *Book) (*ResponseCrea
 	if err != nil {
 		return nil, fmt.Errorf("update book: %w", err)
 	}
+
 	return &ResponseCreateBook{
-		ID:     updatedBook.ID,
-		Title:  updatedBook.Title,
-		Author: updatedBook.Author,
+		ID:          updatedBook.ID,
+		Title:       updatedBook.Title,
+		Author:      updatedBook.Author,
+		Published:   FlexibleDate{Time: updatedBook.Published},
+		Image:       updatedBook.Image,
+		Description: updatedBook.Description,
 	}, nil
 }

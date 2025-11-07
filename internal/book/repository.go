@@ -26,7 +26,7 @@ func NewBookRepository(db *sql.DB) *BookRepository {
 
 func (r *BookRepository) GetBookByID(ctx context.Context, id uuid.UUID) (*Book, error) {
 	query := `
-		SELECT id, title, author, published, image, description, created_at, updated_at, deleted_at
+		SELECT id, title, author, published_date, image_url, description, created_at, updated_at
 		FROM books
 		WHERE id = $1
 	`
@@ -41,7 +41,6 @@ func (r *BookRepository) GetBookByID(ctx context.Context, id uuid.UUID) (*Book, 
 		&book.Description,
 		&book.Created_at,
 		&book.Updated_at,
-		&book.Deleted_at,
 	)
 
 	// Acima nós mandamos todos os valores retornados para a struc book,
@@ -60,14 +59,14 @@ func (r *BookRepository) GetBookByID(ctx context.Context, id uuid.UUID) (*Book, 
 
 func (r *BookRepository) CreateBook(ctx context.Context, book *Book) (*Book, error) {
 	query := `
-		INSERT INTO books (title, author, published_date) 
-		VALUES (&1, &2, &3)
+		INSERT INTO books (title, author, published_date, image_url, description) 
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id, created_at, updated_at
 	`
 
 	err := r.db.QueryRowContext(
 		ctx, query,
-		book.Title, book.Author, book.Published).Scan(&book.ID, &book.Created_at, &book.Updated_at)
+		book.Title, book.Author, book.Published, book.Image, book.Description).Scan(&book.ID, &book.Created_at, &book.Updated_at)
 
 	if err != nil {
 		return nil, fmt.Errorf("insert book: %w", err)
@@ -78,10 +77,10 @@ func (r *BookRepository) CreateBook(ctx context.Context, book *Book) (*Book, err
 func (r *BookRepository) UpdateBook(ctx context.Context, book *Book) (*Book, error) {
 	query := `
 		UPDATE books
-		SET title = &1, author = &2, published_date = &3,
-		image_url = &4, description = &5, updated_at = NOW()
-		WHERE id = &6
-		RETURNING id, title, author, published_date, image_url, description, created_at, updated_at, deleted_at
+		SET title = $1, author = $2, published_date = $3,
+		image_url = $4, description = $5, updated_at = NOW()
+		WHERE id = $6
+		RETURNING id, title, author, published_date, image_url, description, created_at, updated_at
 	`
 	var updatedBook Book
 	err := r.db.QueryRowContext(
@@ -95,7 +94,6 @@ func (r *BookRepository) UpdateBook(ctx context.Context, book *Book) (*Book, err
 		&updatedBook.Description,
 		&updatedBook.Created_at,
 		&updatedBook.Updated_at,
-		&updatedBook.Deleted_at,
 	)
 
 	if err != nil {
